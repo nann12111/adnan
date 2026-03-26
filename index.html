@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Shop Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0a0a0b',
+                        card: '#141416',
+                        border: '#232326',
+                        accent: '#D4AF37', // Gold
+                        'accent-dim': '#b8962f'
+                    },
+                    fontFamily: {
+                        'display': ['Playfair Display', 'serif'],
+                        'body': ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #0a0a0b; color: #f5f5f5; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #141416; }
+        ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 3px; }
+
+        /* Glassmorphism */
+        .glass { background: rgba(20, 20, 22, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        
+        /* Marquee */
+        .marquee-content { animation: marquee 25s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
+
+        /* Smooth transitions */
+        .transition-smooth { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- TAMPILAN CUSTOMER -->
+    <div id="view-customer">
+        <!-- Top Bar -->
+        <div class="bg-dark border-b border-border">
+            <div class="overflow-hidden whitespace-nowrap py-2 text-xs font-semibold text-accent/80 tracking-wider">
+                <div class="marquee-content inline-block" id="running-text">
+                    WELCOME TO FF SHOP PREMIUM — TOP UP CEPAT DAN TERPERCAYA —
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="p-6 flex justify-between items-center max-w-6xl mx-auto">
+            <div>
+                <h1 class="font-display text-3xl md:text-4xl text-white tracking-wide" id="store-name">FF SHOP</h1>
+                <p class="text-xs text-gray-500 mt-1 tracking-widest uppercase">Official Partner</p>
+            </div>
+            <a href="?admin=true" class="text-xs bg-card px-4 py-2 rounded-full border border-border hover:border-accent transition-smooth">
+                Admin Login
+            </a>
+        </header>
+
+        <!-- Hero Banner -->
+        <section class="px-4 md:px-6 max-w-6xl mx-auto mt-2">
+            <div class="relative rounded-2xl overflow-hidden h-48 md:h-72 bg-card border border-border">
+                <img id="main-banner" src="https://placehold.co/1200x400/141416/333?text=BANNER+PROMO" class="w-full h-full object-cover opacity-80" alt="Banner">
+                <div class="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent"></div>
+            </div>
+        </section>
+
+        <!-- Product Grid -->
+        <main class="p-6 max-w-6xl mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold border-l-4 border-accent pl-3">Product List</h2>
+            </div>
+            <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <!-- Produk akan muncul di sini -->
+                <div class="col-span-full text-center py-10 text-gray-500">
+                    Memuat produk...
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- TAMPILAN ADMIN -->
+    <div id="view-admin" class="hidden min-h-screen p-6 md:p-8 max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="font-display text-3xl text-accent">Admin Panel</h1>
+                <p class="text-sm text-gray-500">Kelola toko kamu disini.</p>
+            </div>
+            <a href="?" class="bg-card border border-border px-4 py-2 text-sm rounded-lg hover:bg-border transition-smooth">Lihat Toko</a>
+        </div>
+
+        <!-- Settings Section -->
+        <div class="glass rounded-xl p-6 mb-8 border border-border">
+            <h3 class="font-semibold mb-4 text-lg border-b border-border pb-2">Pengaturan Umum</h3>
+            <div class="grid gap-4">
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">Nama Toko</label>
+                    <input type="text" id="input-name" class="w-full bg-dark border border-border rounded-lg p-3 text-sm focus:border-accent outline-none" placeholder="Nama toko">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">Running Text</label>
+                    <input type="text" id="input-running" class="w-full bg-dark border border-border rounded-lg p-3 text-sm focus:border-accent outline-none" placeholder="Teks berjalan">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">URL Banner Utama</label>
+                    <input type="text" id="input-banner" class="w-full bg-dark border border-border rounded-lg p-3 text-sm focus:border-accent outline-none" placeholder="https://linkgambar.com/img.jpg">
+                </div>
+                <button onclick="saveSettings()" class="mt-2 bg-accent text-dark font-bold p-3 rounded-lg hover:bg-accent-dim transition-smooth">Simpan Perubahan</button>
+            </div>
+        </div>
+
+        <!-- Product Management -->
+        <div class="glass rounded-xl p-6 border border-border">
+            <h3 class="font-semibold mb-4 text-lg border-b border-border pb-2">Manajemen Produk</h3>
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                <input type="text" id="prod-name" placeholder="Nama Produk" class="w-full bg-dark border border-border rounded-lg p-3 text-sm focus:border-accent outline-none">
+                <input type="number" id="prod-price" placeholder="Harga (Angka)" class="w-full bg-dark border border-border rounded-lg p-3 text-sm focus:border-accent outline-none">
+            </div>
+            <input type="text" id="prod-img" placeholder="Link Gambar Produk" class="w-full bg-dark border border-border rounded-lg p-3 text-sm mb-4 focus:border-accent outline-none">
+            <button onclick="addProduct()" class="w-full bg-white text-dark font-bold p-3 rounded-lg hover:bg-gray-200 transition-smooth">Tambah Produk Baru</button>
+
+            <div id="admin-list" class="mt-6 space-y-3">
+                <!-- List produk admin -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHECKOUT -->
+    <div id="modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass rounded-2xl w-full max-w-md p-6 relative border border-border transform scale-95 opacity-0 transition-all duration-300" id="modal-box">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+            
+            <div class="text-center mb-6">
+                <h2 class="font-display text-2xl text-accent">Checkout</h2>
+                <p class="text-xs text-gray-500 mt-1">Lengkapi data untuk memesan</p>
+            </div>
+
+            <div class="space-y-3">
+                <input type="text" id="u-name" placeholder="Nama Customer" class="w-full bg-dark border border-border rounded-lg p-3 text-sm focus:border-accent outline-none">
+                <input type="text" id="u-id" placeholder="User ID / ID Game" class="w-full bg-dark border border-border rounded-lg p-3 text-sm focus:border-accent outline-none">
+                
+                <div class="bg-dark border border-border rounded-lg p-4 mt-4 text-sm space-y-2">
+                    <div class="flex justify-between text-gray-400">
+                        <span>Produk</span>
+                        <span id="d-name" class="text-white font-semibold">-</span>
+                    </div>
+                    <div class="flex justify-between text-gray-400">
+                        <span>Harga</span>
+                        <span id="d-price" class="text-white">-</span>
+                    </div>
+                    <div class="flex justify-between text-gray-400">
+                        <span>Biaya Admin</span>
+                        <span class="text-white">Rp 3.000</span>
+                    </div>
+                    <div class="border-t border-border my-2 pt-2 flex justify-between text-accent font-bold">
+                        <span>Total Bayar</span>
+                        <span id="d-total">-</span>
+                    </div>
+                    <div class="text-right text-xs text-gray-500">
+                        Tanggal: <span id="d-date"></span>
+                    </div>
+                </div>
+
+                <button onclick="processCheckout()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold p-3 rounded-lg flex items-center justify-center gap-2 transition-smooth mt-4">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    Pesan via WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =======================================================
+        // KONFIGURASI WA & DATABASE (SUDAH TERISI)
+        // =======================================================
+        const WA_NUMBER = '6289507939775'; 
+        const ADMIN_FEE = 3000;
+
+        const SUPABASE_URL = 'https://yqfiuvdktpbvctwhmqqs.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_xryuslFxdcUHnrWYNRMDOw_nljvA5_a';
+
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // =======================================================
+        // LOGIKA APLIKASI
+        // =======================================================
+        let cartData = {};
+
+        // Cek mode admin
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('admin')) {
+            document.getElementById('view-customer').classList.add('hidden');
+            document.getElementById('view-admin').classList.remove('hidden');
+            loadAdminData();
+        } else {
+            document.getElementById('view-customer').classList.remove('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+            loadDataCustomer();
+        }
+
+        // --- FUNGSI DATABASE ---
+
+        async function loadDataCustomer() {
+            // Load Settings
+            const { data: settings } = await _supabase.from('settings').select('*');
+            if (settings) {
+                settings.forEach(s => {
+                    if (s.key === 'name') document.getElementById('store-name').innerText = s.value;
+                    if (s.key === 'running') document.getElementById('running-text').innerText = s.value + " — " + s.value + " — "; 
+                    if (s.key === 'banner') document.getElementById('main-banner').src = s.value;
+                });
+            }
+
+            // Load Products
+            const { data: products } = await _supabase.from('products').select('*').order('id', { ascending: false });
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+
+            if (!products || products.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">Belum ada produk.</div>';
+                return;
+            }
+
+            products.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'bg-card border border-border rounded-xl overflow-hidden cursor-pointer group transition-smooth hover:border-accent/50';
+                card.onclick = () => openModal(p);
+                card.innerHTML = `
+                    <div class="aspect-square bg-dark relative overflow-hidden">
+                        <img src="${p.image || 'https://placehold.co/400x400/141416/333?text=Item'}" class="w-full h-full object-cover group-hover:scale-105 transition-smooth opacity-90" alt="${p.name}">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-white text-sm mb-1 truncate">${p.name}</h3>
+                        <p class="text-accent font-bold">Rp ${new Intl.NumberFormat('id-ID').format(p.price)}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function loadAdminData() {
+            // Load Settings to Form
+            const { data: settings } = await _supabase.from('settings').select('*');
+            if (settings) {
+                settings.forEach(s => {
+                    if (s.key === 'name') document.getElementById('input-name').value = s.value;
+                    if (s.key === 'running') document.getElementById('input-running').value = s.value;
+                    if (s.key === 'banner') document.getElementById('input-banner').value = s.value;
+                });
+            }
+
+            // Load Products List
+            const { data: products } = await _supabase.from('products').select('*').order('id', { ascending: false });
+            const list = document.getElementById('admin-list');
+            list.innerHTML = '';
+            
+            if (!products || products.length === 0) {
+                list.innerHTML = '<p class="text-gray-500 text-sm">Belum ada produk.</p>';
+                return;
+            }
+
+            products.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'flex justify-between items-center bg-dark p-3 rounded-lg border border-border';
+                item.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-sm">${p.name}</p>
+                        <p class="text-xs text-gray-500">Rp ${new Intl.NumberFormat('id-ID').format(p.price)}</p>
+                    </div>
+                    <button onclick="deleteProduct(${p.id})" class="text-xs bg-red-500/20 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition-smooth">Hapus</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // --- FUNGSI ADMIN ---
+
+        async function saveSettings() {
+            const name = document.getElementById('input-name').value;
+            const running = document.getElementById('input-running').value;
+            const banner = document.getElementById('input-banner').value;
+
+            await _supabase.from('settings').upsert({ key: 'name', value: name });
+            await _supabase.from('settings').upsert({ key: 'running', value: running });
+            await _supabase.from('settings').upsert({ key: 'banner', value: banner });
+            
+            alert('Pengaturan disimpan! Buka halaman utama untuk melihat hasilnya.');
+        }
+
+        async function addProduct() {
+            const name = document.getElementById('prod-name').value;
+            const price = document.getElementById('prod-price').value;
+            const image = document.getElementById('prod-img').value;
+
+            if (!name || !price) return alert('Nama dan Harga wajib diisi!');
+
+            const { error } = await _supabase.from('products').insert({ name, price, image });
+            if (!error) {
+                document.getElementById('prod-name').value = '';
+                document.getElementById('prod-price').value = '';
+                document.getElementById('prod-img').value = '';
+                loadAdminData();
+                alert('Produk berhasil ditambahkan!');
+            } else {
+                console.error(error);
+                alert('Gagal menambah produk. Cek console untuk detail error.');
+            }
+        }
+
+        async function deleteProduct(id) {
+            if(confirm('Yakin hapus produk ini?')) {
+                await _supabase.from('products').delete().eq('id', id);
+                loadAdminData();
+            }
+        }
+
+        // --- FUNGSI MODAL & CHECKOUT ---
+
+        function openModal(p) {
+            cartData = p;
+            const total = parseInt(p.price) + ADMIN_FEE;
+            const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            document.getElementById('d-name').innerText = p.name;
+            document.getElementById('d-price').innerText = `Rp ${new Intl.NumberFormat('id-ID').format(p.price)}`;
+            document.getElementById('d-total').innerText = `Rp ${new Intl.NumberFormat('id-ID').format(total)}`;
+            document.getElementById('d-date').innerText = today;
+
+            document.getElementById('modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('modal-box').classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function closeModal() {
+            document.getElementById('modal-box').classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('modal').classList.add('hidden');
+            }, 200);
+        }
+
+        function processCheckout() {
+            const cName = document.getElementById('u-name').value;
+            const cID = document.getElementById('u-id').value;
+            
+            if(!cName || !cID) return alert('Lengkapi nama dan ID Game!');
+
+            const total = parseInt(cartData.price) + ADMIN_FEE;
+            const today = new Date().toLocaleDateString('id-ID');
+
+            const text = `*ORDER BARU - FF SHOP*
+------------------------------
+Tanggal : ${today}
+Nama    : ${cName}
+ID Game : ${cID}
+------------------------------
+Produk  : ${cartData.name}
+Harga   : Rp ${new Intl.NumberFormat('id-ID').format(cartData.price)}
+Admin   : Rp 3.000
+------------------------------
+*TOTAL  : Rp ${new Intl.NumberFormat('id-ID').format(total)}*`;
+
+            const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
